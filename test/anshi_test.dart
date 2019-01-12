@@ -12,7 +12,7 @@ void main() {
   // });
 
   test('Anshi main functions', () {
-    final AnshiImplementation a = AnshiImplementation();
+    final Anshi a = Anshi();
     const graphql = 'query A { user { id, name, children { edges { node { id, name } } } } }';
     a.parseGraphQL(graphql);
     expect(1, 1);
