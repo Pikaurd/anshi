@@ -49,16 +49,10 @@ void main() {
     });
 
     test('mismatch query', () async {
-      var result;
-      try {
-        result = await graphql.parseAndExecute('query X { todos { text, xx } }');
-      } catch (e) {
-        print('got error');
-        expect(e, throwsA(const TypeMatcher<GraphQLExceptionError>()));
-      }
-
-      print(result);
-      expect(result, throwsA(const TypeMatcher<GraphQLExceptionError>()));
+      expect(
+        graphql.parseAndExecute('query X { todos { xx } }'), 
+        throwsA(const TypeMatcher<GraphQLException>())
+      );
     });
 
   });

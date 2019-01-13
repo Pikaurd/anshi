@@ -234,7 +234,11 @@ class GraphQL {
           var fieldType = objectType.fields
               .firstWhere((f) => f.name == fieldName, orElse: () => null)
               ?.type;
-          if (fieldType == null) continue;
+          if (fieldType == null) {
+            print('unknowd type: ' + fieldName);
+            throw new GraphQLException.fromMessage(
+              'Cannot query field "$fieldName" on type "${objectType.name}".');
+          }
           responseValue = await executeField(
               document,
               fieldName,
