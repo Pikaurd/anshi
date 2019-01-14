@@ -18,7 +18,7 @@ void main() {
     ]);
 
     final schema = graphQLSchema(
-      queryType: objectType('api', fields: [
+      queryType: objectType('query', fields: [
         field(
           'todos',
           listOf(todoType),
@@ -48,9 +48,16 @@ void main() {
       });
     });
 
-    test('mismatch query', () async {
+    test('mismatch query field', () {
       expect(
         graphql.parseAndExecute('query X { todos { xx } }'), 
+        throwsA(const TypeMatcher<GraphQLException>())
+      );
+    });
+
+    test('mismatch query', () {
+      expect(
+        graphql.parseAndExecute('query X { haha { xx } }'), 
         throwsA(const TypeMatcher<GraphQLException>())
       );
     });
