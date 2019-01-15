@@ -4,7 +4,7 @@ class Operation {
   final OperationMethod method;
   final List<Field> affectedField;
 
-  const Operation( OperationMethod method, [List<Field> affectedField]):
+  const Operation(OperationMethod method, [List<Field> affectedField]):
     this.method = method,
     this.affectedField = affectedField == null ? const [] : affectedField;
 }

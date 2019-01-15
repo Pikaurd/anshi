@@ -1,10 +1,28 @@
-import 'package:quiver/collection.dart';
+import 'package:graphql_schema/graphql_schema.dart';
 
-class Record {}
+import 'package:anshi/src/graphql/graphql.dart';
 
-class RecordStore extends DelegatingMap<String, Record> {
-  final Map<String, Record> _records = {};
 
-  Map<String, Record> get delegate => _records;
+abstract class Store {
+
+  GraphQLSchema get schema;
+
+  GraphQL get client;
 }
 
+class NaiveStore implements Store {
+
+  GraphQL _client;
+  final GraphQLSchema _schema;
+
+  NaiveStore(this._schema) {
+    this._client = GraphQL(schema);
+  }
+
+  @override
+  GraphQL get client => _client;
+
+  @override
+  GraphQLSchema get schema => _schema;
+
+}

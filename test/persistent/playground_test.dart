@@ -1,6 +1,10 @@
 import 'package:test/test.dart';
+import 'package:graphql_schema/graphql_schema.dart';
 
-import 'package:anshi/anshi.dart';
+import 'package:anshi/src/graphql/graphql.dart';
+import 'package:anshi/src/persistent/persistent.dart';
+
+
 
 void main() {
   // test('adds one to input values', () {
@@ -11,3 +15,4 @@ void main() {
   //   // expect(() => calculator.addOne(null), throwsNoSuchMethodError);
   // });
 }
+
