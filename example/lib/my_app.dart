@@ -22,18 +22,19 @@ class CounterModel {
 }
 
 var aGlobalCounter = CounterModel();
-final store = NaiveStore(graphQLSchema(
+final schema = graphQLSchema(
   queryType: objectType('Query', fields: [
     field('counter', CounterModel.type, resolve: (_, __) => aGlobalCounter),
   ]),
   mutationType: objectType('Mutation', fields: [
-    field('addCount', graphQLInt, resolve: (obj, args) {
+    field('addCount', CounterModel.type, resolve: (obj, args) {
       print('obj: $obj \t args: $args');
       aGlobalCounter.count += 1;
       return aGlobalCounter;
     }),
   ]),
-));
+);
+final store = NaiveStore(schema);
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -45,7 +46,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: BlocProvider<GraphQLBloc>(
-        bloc: GraphQLBloc('query X { counter { count } }'),
+        bloc: GraphQLBloc('query X { counter { count } }', store, 'Counter'),
         child: CounterPage(title: 'Anshi Demo Counter'),
       ),
       // home: CounterPage(title: 'Anshi Demo Counter'),
@@ -105,15 +106,16 @@ class CounterPage extends StatelessWidget {
   CounterPage({Key key, this.title}) : super(key: key);
 
   final String title;
+  GraphQLBloc bloc;
 
   void _incrementCounter() {
     print('commit mutation: counter + 1');
-    store.client.parseAndExecute('mutation X { addCounter }');
+    store.commitMutation('mutation X { addCount }');
   }
   
   @override
   Widget build(BuildContext context) {
-    final bloc = BlocProvider.of<GraphQLBloc>(context);
+    bloc = BlocProvider.of<GraphQLBloc>(context);
     print('bloc.query: ${bloc.query}');
     return Scaffold(
       appBar: AppBar(
@@ -123,6 +125,7 @@ class CounterPage extends StatelessWidget {
         child: StreamBuilder<dynamic>(
           stream: bloc.stream,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            print('snapshot: ${snapshot}');
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
