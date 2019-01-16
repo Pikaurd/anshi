@@ -16,5 +16,11 @@
       "request": "launch",
       "program": "./test/"
     },
+    {
+      "name": "Dart: relay_store example",
+      "type": "dart",
+      "request": "launch",
+      "program": "relay_store/example/main.dart"
+    },
   ]
 }
