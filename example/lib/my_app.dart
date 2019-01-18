@@ -110,6 +110,7 @@ class CounterPage extends StatelessWidget {
 
   void _incrementCounter() {
     print('commit mutation: counter + 1');
+    print('symbol : ${#haha}');
     store.commitMutation('mutation X { addCount }');
   }
   
