@@ -135,8 +135,8 @@ abstract class ReaderSplitOperation extends ReaderNode implements ReaderSelectab
 export type ReaderSelection =
   // | ReaderCondition
   // | ReaderField
-  | ReaderFragmentSpread
-  | ReaderInlineFragment
+  // | ReaderFragmentSpread
+  // | ReaderInlineFragment
   | ReaderMatchField;
  */
 abstract class ReaderSelection {
