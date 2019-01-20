@@ -55,6 +55,9 @@ String getHandleStorageKey(NormalizationHandle handleField, Variables variables)
   if (!args.isPresent || !filters.isPresent || args.or(emptyList).length == 0 || filters.or(emptyList).length == 0) {
     return handleName;
   }
+  final filterArgs = args.value.where((arg) => filters.value.contains(arg.name));
+  final argValues = filterArgs.fold({}, (acc, e) => acc[e.name] = e);
+  return formatStorageKey(handleName, argValues);
 }
 
 /*
