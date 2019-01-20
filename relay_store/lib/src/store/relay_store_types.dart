@@ -29,7 +29,12 @@ class Record extends DelegatingMap<String, dynamic> {
   Map<String, dynamic> get delegate => _record;
 }
 
-class Variables {}
+class Variables extends DelegatingMap<String, dynamic> {
+  final Map<String, dynamic> _recordMap = {};
+
+  @override
+  Map<String, dynamic> get delegate => _recordMap;
+}
 
 abstract class Store {
   RecordSource getSource();
@@ -70,7 +75,7 @@ class SelectorData extends DelegatingMap<String, dynamic> {
 }
 
 class RecordMap extends DelegatingMap<String, Optional<Record>> {
-  final Map<String, dynamic> _recordMap = {};
+  final Map<String, Optional<Record>> _recordMap = {};
 
   @override
   Map<String, Optional<Record>> get delegate => _recordMap;
