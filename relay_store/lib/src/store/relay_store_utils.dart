@@ -26,9 +26,16 @@ class Arguments extends DelegatingMap<String, dynamic> {
   Map<String, dynamic> get delegate => _delegate;
 }
 
-Arguments getArgumentValues() {
-  var values = {};
-
+// args: NormalizationArgument | ReaderArgument
+Arguments getArgumentValues(List<dynamic> args, Variables variables) {
+  var values = Arguments();
+  args.forEach((arg) {
+    if (arg.kind == #varibale) {
+      values[arg.name] = getStableVariableValue(arg.variableName, variables);
+    } else {
+      values[arg.name] = arg.value;
+    }
+  });
   return values;
 }
 
@@ -123,3 +130,6 @@ String getRelayHandleKey(String handleName, String key, String fieldName) {
   return '__${fieldName}_${handleName}';
 }
 
+dynamic getStableVariableValue(String name, Variables variables) {
+  return variables[name];
+}
