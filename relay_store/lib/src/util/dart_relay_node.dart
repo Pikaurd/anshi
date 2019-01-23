@@ -2,30 +2,23 @@ import 'package:quiver/core.dart';
 import 'package:quiver/collection.dart';
 
 
-abstract class DartRelayNode<T> extends DelegatingMap<String, T> {
-  final Map<String, dynamic> data = {};
-  List<String> avaliableKeys = [];
+abstract class DartRelayNode extends DelegatingMap<String, dynamic> {
+  final Map<String, dynamic> _data = {};
+  final Symbol kind;
+  final List<String> _avaliableKeys;
 
   @override
-  Map<String, T> get delegate => _validateBeforeGet();
+  Map<String, dynamic> get delegate => _data;
 
-  @override
-  void operator[]=(String key, T value) {
-    if (!validate(key, value)) throw 'illegal set';
-    delegate[key] = value;
+  DartRelayNode(this.kind, this._avaliableKeys) {
+    _data['kind'] = this.kind;
   }
 
-  Map<String, T> _validateBeforeGet() {
-    const isRelease = bool.fromEnvironment("dart.vm.product");
-    if (isRelease) return data;
-    _selfCheck();
-    return data;
-  }
-
-  bool validate(String key, T value);
-  void _selfCheck() {
-    avaliableKeys.forEach((v) => {
-
-    });
+  bool selfCheck() {
+    final isVerified = _avaliableKeys.every((k) => _data.keys.contains(k));
+    if (!isVerified) {
+      throw 'Missing keys';
+    }
+    return isVerified;
   }
 }

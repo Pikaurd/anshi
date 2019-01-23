@@ -1,7 +1,5 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:graphql_schema/graphql_schema.dart';
-import 'package:anshi/anshi.dart';
 import 'package:anshi/src/store/store.dart';
 import 'package:anshi/src/store/bloc_provider.dart';
 import 'package:anshi/src/store/graphql_bloc.dart';
@@ -55,53 +53,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-}
-
 class CounterPage extends StatelessWidget {
   CounterPage({Key key, this.title}) : super(key: key);
 
@@ -110,7 +61,6 @@ class CounterPage extends StatelessWidget {
 
   void _incrementCounter() {
     print('commit mutation: counter + 1');
-    print('symbol : ${#haha}');
     store.commitMutation('mutation X { addCount }');
   }
   
@@ -134,7 +84,7 @@ class CounterPage extends StatelessWidget {
                   'You have pushed the button this many times:',
                 ),
                 Text(
-                  '_counter: ${snapshot.data}',
+                  '_counter: ${snapshot.data["counter"]["count"]}',
                   style: Theme.of(context).textTheme.display1,
                 ), 
               ]

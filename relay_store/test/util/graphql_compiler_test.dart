@@ -18,32 +18,144 @@ void main() {
       queryType: objectType('query', fields: [
         field('users', listOf(userSchema)),
         field('user', userSchema),
+        field('node', listOf(userSchema), inputs: [GraphQLFieldInput('id', graphQLId)]),
       ]),
     );
+    final allTypes = [userSchema, addressSchema];
 
-    test('ConcreteRequest', () {
-      var a = ConcreteRequest();
-      a['name'] = 'haha';
-      expect(a['name'], 'haha');
+    test('simple fragment with inner object', () {
+      final actual = generateAndCompile('fragment UF on User { address { text } }', schema, allTypes);
+      final expected = {
+        'UF': {
+          'kind': 'Fragment',
+          'name': 'UF',
+          'type': 'User',
+          'argumentDefinitions': [],
+          'selections': [
+            {
+              'kind': 'LinkedField',
+              'name': 'address',
+              'args': null,
+              'storageKey': null,
+              'plural': false,
+              'selections': [
+                {
+                  'kind': 'ScalarField',
+                  'name': 'text',
+                  'args': null,
+                  'storageKey': null,
+                }
+              ]
+            }
+          ],
+        },
+      };
+      expect(actual, expected);
     });
 
-    test('simple fragment', () {
-      final actual = generateAndCompile('fragment UF on User { name }', schema);
-      /*
-      { kind: 'Fragment',
-      name: 'UserFragment',
-      type: 'User',
-      metadata: null,
-      argumentDefinitions: [],
-      selections:
-       [ { kind: 'ScalarField',
-           alias: null,
-           name: 'name',
-           args: null,
-           storageKey: null } ] }
-       */
+    test('simple fragment with type', () {
+      final actual = generateAndCompile('fragment UF on User { name }', schema, allTypes);
       final expected = {
-        'kind': #fragment,
+        'UF': {
+          'kind': 'Fragment',
+          'name': 'UF',
+          'type': 'User',
+          'argumentDefinitions': [],
+          'selections': [
+            {
+              'kind': 'ScalarField',
+              'name': 'name',
+              'args': null,
+              'storageKey': null,
+            }
+          ],
+        },
+      };
+      expect(actual, expected);
+    });
+
+    test('simple query with argument', () {
+      final text = '''
+      query X { node(id: 2) { id } }
+      ''';
+      final actual = generateAndCompile(text, schema, allTypes);
+      final expected = {
+        'X': {
+          'kind': 'Request',
+          'fragment': {
+            'kind': 'Fragment',
+            'name': 'X',
+            'type': 'Query',
+            'metadata': null,
+            'argumentDefinitions': [],
+            'selections': [
+              {
+                'kind': 'LinkedField',
+                'name': 'node',
+                'sotrangeKey': 'node(id:2)',
+                'args': [
+                  {
+                    'kind': 'Literal',
+                    'name': 'id',
+                    'value': 2,
+                    'type': 'ID',
+                  }
+                ],
+                'plural': false,
+                'selections': [
+                  {
+                    'kind': 'ScalarField',
+                    'name': 'id',
+                    'args': null,
+                    'storageKey': null,
+                  },
+                ],
+              }
+            ],
+          },
+          'operation': {
+            'kind': 'Operation',
+            'name': 'X',
+            'argumentDefinitions': [],
+            'selections': [
+              {
+                'kind': 'LinkedField',
+                'name': 'node',
+                'storageKey': 'node(id:2)',
+                'args': [
+                  {
+                    'kind': 'Literal',
+                    'name': 'id',
+                    'value': 2,
+                    'type': 'ID'
+                  }
+                ],
+                'plural': false,
+                'selections': [
+                  // {
+                  //   'kind': 'ScalarField',
+                  //   'name': '__typename',
+                  //   'args': null,
+                  //   'storageKey': null
+                  // },
+                  {
+                    'kind': 'ScalarField',
+                    'name': 'id',
+                    'args': null,
+                    'storageKey': null
+                  },
+                ],
+              }
+            ],
+          },
+          'params': {
+            'operationKind': 'query',
+            'name': 'X',
+            'id': null,
+            'text': 'query X { user(id: 2) { id name }',
+            'metadata': {}
+          }
+        }
       };
       expect(actual, expected);
     });

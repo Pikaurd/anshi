@@ -2,16 +2,22 @@ import 'package:quiver/collection.dart';
 import 'package:quiver/core.dart';
 
 import './relay_record_state.dart';
-import '../util/normalization_node.dart';
+import '../util/normalization_node_2.dart';
 
 typedef Scheduler = void Function(void Function(void));
+
+abstract class RelayObject extends DelegatingMap<String, dynamic> {
+  Map<String, dynamic> _data = {};
+  @override
+  Map<String, dynamic> get delegate => _data;
+}
 
 abstract class RecordSource {
   Optional<Record> get(String dataID);
   List<String> getRecordIDs();
   RecordState getStatus(String dataID);
   bool has(String dataID);
-  void load(String dataID, Function(Error error, Record record) callback);
+  void load(String dataID, Function(Optional<Error> error, Optional<Record> record) callback);
   int size();
 }
 
