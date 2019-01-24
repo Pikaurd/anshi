@@ -1,27 +1,10 @@
 import 'package:test/test.dart';
-import 'package:graphql_schema/graphql_schema.dart';
 
 import 'package:relay_store/src/util/graphql_compiler.dart';
+import '../test_common.dart';
 
 void main() {
   group('GraphQL compiler', () {
-    final addressSchema = objectType('Address', fields: [
-      field('id', graphQLString),
-      field('text', graphQLString),
-    ]);
-    final userSchema = objectType('User', fields: [
-      field('id', graphQLString),
-      field('name', graphQLString),
-      field('address', addressSchema),
-    ]);
-    final schema = GraphQLSchema(
-      queryType: objectType('query', fields: [
-        field('users', listOf(userSchema)),
-        field('user', userSchema),
-        field('node', listOf(userSchema), inputs: [GraphQLFieldInput('id', graphQLId)]),
-      ]),
-    );
-    final allTypes = [userSchema, addressSchema];
 
     group('SelectorGenerator', () {
 
@@ -157,6 +140,52 @@ void main() {
             //   'text': 'query X { user(id: 2) { id name }',
             //   'metadata': {}
             // }
+          }
+        };
+        expect(actual, expected);
+      });
+
+      test('fragment with inner input field', () {
+        const text = '''
+          fragment UserFragment on User {
+            profilePicture(size: 128) { uri }
+          }
+        ''';
+        final actual = generateAndCompile(text, schema, allTypes);
+        final expected = {
+          "UserFragment": {
+            "kind": "Fragment",
+            "name": "UserFragment",
+            "type": "User",
+            // "metadata": null,
+            "argumentDefinitions": [],
+            "selections": [
+              {
+                "kind": "LinkedField",
+                // "alias": null,
+                "name": "profilePicture",
+                "storageKey": "profilePicture(size:128)",
+                "args": [
+                  {
+                    "kind": "Literal",
+                    "name": "size",
+                    "value": 128,
+                    "type": "Int"
+                  }
+                ],
+                // "concreteType": "Image", // TODO: useful
+                "plural": false,
+                "selections": [
+                  {
+                    "kind": "ScalarField",
+                    // "alias": null,
+                    "name": "uri",
+                    "args": null,
+                    "storageKey": null
+                  }
+                ]
+              }
+            ]
           }
         };
         expect(actual, expected);

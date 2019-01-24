@@ -2,15 +2,12 @@ import 'package:quiver/collection.dart';
 import 'package:quiver/core.dart';
 
 import './relay_record_state.dart';
+import '../util/dart_relay_node.dart';
 import '../util/normalization_node_2.dart';
 
 typedef Scheduler = void Function(void Function(void));
 
-abstract class RelayObject extends DelegatingMap<String, dynamic> {
-  Map<String, dynamic> _data = {};
-  @override
-  Map<String, dynamic> get delegate => _data;
-}
+
 
 abstract class RecordSource {
   Optional<Record> get(String dataID);
@@ -80,11 +77,11 @@ class SelectorData extends DelegatingMap<String, dynamic> {
   Map<String, dynamic> get delegate => _data;
 }
 
-class RecordMap extends DelegatingMap<String, Optional<Record>> {
-  final Map<String, Optional<Record>> _recordMap = {};
+class RecordMap extends DelegatingMap<String, Record> {
+  final Map<String, Record> _recordMap = {};
 
   @override
-  Map<String, Optional<Record>> get delegate => _recordMap;
+  Map<String, Record> get delegate => _recordMap;
 }
 
 abstract class OperationLoader {
@@ -155,3 +152,4 @@ abstract class ReadOnlyRecordSourceProxy {
   ReadOnlyRecordProxy getRoot();
 }
 
+class GeneratedNode extends RelayObject {}

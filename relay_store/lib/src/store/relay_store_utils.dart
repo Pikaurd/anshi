@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'package:built_collection/built_collection.dart';
 import 'package:quiver/collection.dart';
 import 'package:quiver/core.dart';
-import '../util/normalization_node.dart';
+import '../util/normalization_node_2.dart';
 import './relay_store_types.dart';
+import '../util/dart_relay_node.dart';
 
 const String fragmentsKey = '__fragments';
 const String fragmentPropNameKey = '__fragmentPropName';
@@ -82,10 +83,17 @@ function getStorageKey(
     : name;
 }
  */
-String getStorageKey(dynamic field, Variables variables) {
-  final args = field.args;
-  final name = field.name;
-  
+String getStorageKey(RelayObject field, Variables variables) {
+  if (field.containsKey('storageKey') && field['storageKey'] != null) { 
+    return field['storageKey']; 
+  }
+
+  final args = field['args'] as List<dynamic>;
+  final name = field['name'];
+  if (args != null && args.length == 0) {
+    return '';
+  }
+  return name;
 }
 
 /*

@@ -25,7 +25,7 @@ class RelayInMemoryRecordSource implements MutableRecordSource {
 
   @override
   Optional<Record> get(String dataID) {
-    return this._records[dataID];
+    return Optional.fromNullable(this._records[dataID]);
   }
 
   @override
@@ -58,7 +58,7 @@ class RelayInMemoryRecordSource implements MutableRecordSource {
 
   @override
   void set(String dataID, Record record) {
-    this._records[dataID] = Optional.of(record);
+    this._records[dataID] = record;
   }
 
   @override

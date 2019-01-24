@@ -1,43 +1,42 @@
 import 'dart_relay_node.dart';
+import '../store/relay_store_types.dart';
 
-class NormalizationOperation extends DartRelayNode {
-  NormalizationOperation() : super(#operation, ['kind', 'name', 'argumentDefinitions', 'selections']);
+
+// ['kind', 'name', 'argumentDefinitions', 'selections']
+class NormalizationOperation extends NormalizationBaseNode {
+  NormalizationOperation() : super(NormalizationKind.operation);
 }
 
-abstract class NormalizationHandle extends DartRelayNode {
-  NormalizationHandle(Symbol kind, List<String> keys) : super(kind, keys);
+// [ 'kind', 'alias', 'name', 'args', 'handle', 'key', 'filters', ]
+class NormalizationLinkedHandle extends NormalizationBaseNode {
+  NormalizationLinkedHandle() : super(NormalizationKind.linkedHandle);
+}
 
-  @override
-  bool selfCheck() {
-    assert(this.kind == #linkedHandle || this.kind == #scalarHandle);
-    return super.selfCheck();
+class NormalizationScalarHandle extends NormalizationBaseNode {
+  NormalizationScalarHandle() : super(NormalizationKind.scalarHandle);
+}
+
+abstract class NormalizationBaseNode extends RelayObject {
+  final String kind;
+  NormalizationBaseNode(this.kind) {
+    this['kind'] = this.kind;
   }
 }
 
-class NormalizationLinkedHandle extends DartRelayNode {
-  NormalizationLinkedHandle() : super(#linkedHandle, [
-    'kind',
-    'alias',
-    'name',
-    'args',
-    'handle',
-    'key',
-    'filters',
-  ]);
+class NormalizationKind {
+  NormalizationKind._();
+
+  static const operation = 'Operation';
+  static const linkedHandle = 'LinkedHandle';
+  static const scalarHandle = 'ScalarHandle';
+  static const condition = 'Condition';
+  static const rootArgument = 'RootArgument';
+  static const inlineFragment = 'InlineFragment';
+  static const linkedField = 'LinkedField';
+  static const matchField = 'MatchField';
+  static const literal = 'Literal';
+  static const localArgument = 'LocalArgument';
+  static const scalarField = 'ScalarField';
+  static const splitOperation = 'SplitOperation';
+  static const variable = 'Variable';
 }
-
-class NormalizationScalarHandle extends DartRelayNode {
-  NormalizationScalarHandle() : super(#scalarHandle, [
-    'kind',
-    'alias',
-    'name',
-    'args',
-    'handle',
-    'key',
-    'filters',
-  ]);
-}
-
-
-
-
