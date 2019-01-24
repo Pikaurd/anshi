@@ -53,15 +53,21 @@ class SelectorGenerator {
     var node = GeneratedNode();
     node['kind'] = 'Request';
     // >>> construct fragment for operation
-    // var fragmentNode = GeneratedNode();
-    // final typeName = context.typeCondition.typeName.name;
-    // fragmentNode['kind'] = 'Fragment';
-    // fragmentNode['name'] = context.name;
-    // fragmentNode['type'] = typeName;
-    // fragmentNode['argumentDefinitions'] = [];
-    // fragmentNode['selections'] = this._selectionsHandle(context.selectionSet, typeName);
-    // <<< 
-    // node['fragment'] =  fragmentNode;
+    var fragmentNode = GeneratedNode();
+    final type = context.TYPE;
+    if (type.type == TokenType.QUERY) {
+      fragmentNode['type'] = 'Query';
+      fragmentNode['kind'] = 'Fragment';
+      fragmentNode['name'] = context.name;
+      fragmentNode['argumentDefinitions'] = []; // TODO: not handle
+      final nextTypeName = this._getTypeFromQueryField(context.selectionSet.selections);
+      fragmentNode['selections'] = this._selectionsHandle(context.selectionSet, nextTypeName);
+    } else if (type.type == TokenType.MUTATION) {
+      throw 'NOT implement type: $type';
+    } else {
+      throw 'NOT implement type: $type';
+    }
+    node['fragment'] =  fragmentNode;
     // node['operation'] = ;
     // node['params'] = ;
     return node;
@@ -70,67 +76,71 @@ class SelectorGenerator {
   GeneratedNode _fragmentHandle(FragmentDefinitionContext context) {
     var node = GeneratedNode();
     final typeName = context.typeCondition.typeName.name;
+    final objectType = this._getGraphqlObjectType(typeName);
     node['kind'] = 'Fragment';
     node['name'] = context.name;
     node['type'] = typeName;
-    node['argumentDefinitions'] = [];
-    node['selections'] = this._selectionsHandle(context.selectionSet, typeName);
+    node['argumentDefinitions'] = []; // TODO: hard write
+    node['selections'] = this._selectionsHandle(context.selectionSet, objectType);
     return node;
   }
 
-  List<GeneratedNode> _selectionsHandle(SelectionSetContext selectionSet, String onType) {
+  List<GeneratedNode> _selectionsHandle(SelectionSetContext selectionSet, GraphQLType parentType) {
     final iter = selectionSet.selections.map((selectionContext) {
-      // if (selectionContext)
-      return this._fieldHandle(selectionContext.field, onType);
+      if (parentType is GraphQLListType) {
+        return this._fieldHandle(selectionContext.field, parentType);
+      } else if (parentType is GraphQLObjectType) {
+        final fieldType = parentType.fields.firstWhere((e) => e.name == selectionContext.field.fieldName.name).type;
+        return this._fieldHandle(selectionContext.field, fieldType);
+      } else {
+        throw 'should NOT expand';
+      }
     } );
     return iter.toList();
   }
 
-  GeneratedNode _fieldHandle(FieldContext field, String onType) {
+  GeneratedNode _fieldHandle(FieldContext field, GraphQLType fieldType) {
     final nodeName = field.fieldName.name;
     var node = GeneratedNode();
     node['name'] = nodeName;
-    node['args'] = null;  // FIXME: not implement
-    node['storageKey'] = null;  // FIXME: not implement
-    this._fillFieldKind(node, nodeName, onType);
-    if (node['kind'] != 'ScalarField') {
-      String typeName = this._getTypeName(nodeName, onType);
-      node['selections'] = this._selectionsHandle(field.selectionSet, typeName);
-    }
-    return node;
-  }
+    node['args'] = getArgumentValues(field, this._schema);
+    node['storageKey'] = getStorageKey(field);
 
-  void _fillFieldKind(GeneratedNode node, String name, String nodeName) {
-    final object = this._getGraphqlObject(nodeName);
-    invariant(object != null, 'SelectorGenerator: can not fill field on $nodeName in ${this._allTypes.keys}');
-    final field = object.fields.where((field) => field.name == name).first;
-    invariant(field != null, 'Object $nodeName does not have field $name');
-    final fieldType = field.type;
     if (fieldType is GraphQLListType) {
       node['kind'] = 'LinkedField';
       node['plural'] = true;
+      node['selections'] = this._selectionsHandle(field.selectionSet, fieldType.ofType);
     } else if (fieldType is GraphQLObjectType) {
       node['kind'] = 'LinkedField';
       node['plural'] = false;
+      node['selections'] = this._selectionsHandle(field.selectionSet, fieldType);
     } else if (fieldType is GraphQLScalarType) {
       node['kind'] = 'ScalarField';
     }
     else {
       throw 'not implemented GraphQLType: $fieldType';
     }
+
+    return node;
   }
 
-  GraphQLObjectType _getGraphqlObject(String typeName) {
+  GeneratedNode _operationHandleNode() {
+
+  }
+
+  // helper methods
+
+  GraphQLObjectType _getGraphqlObjectType(String typeName) {
     final object = this._allTypes[typeName];
     invariant(field != null, 'Object $typeName does not have exist in ${this._allTypes.keys}');
     return object;
   }
 
-  String _getTypeName(String fieldName, String onType) {
-    final object = this._getGraphqlObject(onType);
-    final field = object.fields.singleWhere((o) => o.name == fieldName);
-    invariant(field != null, 'SelectorGenerator: field $fieldName not exist on type $onType');
-    return field.type.name;
+  GraphQLType _getTypeFromQueryField(List<SelectionContext> selections) {
+    final fieldName = selections.first.field.fieldName.name;
+    invariant(fieldName != null, 'SelectorGenerator: fetch fieldName failed in ${selections}');
+    final objectField = this._schema.queryType.fields.firstWhere((field) => field.name == fieldName);
+    return objectField.type;
   }
 
 }
@@ -139,3 +149,39 @@ class SelectorGenerator {
 
 
 class GeneratedNode extends RelayObject {}
+
+String getStorageKey(FieldContext field) {
+  if (field == null) return null;
+  if (field.arguments.length == 0) return null;
+  print('getStorageKey: $field');
+
+  final x = field.arguments.map((e) => '${e.name}:${e.valueOrVariable.value.value}').toList();
+  final arguments = x.join(',');
+  return '${field.fieldName.name}($arguments)';
+}
+
+List<GeneratedNode> getArgumentValues(FieldContext field, GraphQLSchema schema) {
+  final arguments = field.arguments;
+  if (arguments.length == 0) return null;
+  print('arguments: $arguments');
+
+  final inputsType = _getTypeFromQueryField(field, schema);
+  var nodes = List<GeneratedNode>();
+  nodes = arguments.map((e) {
+    GraphQLFieldInput fieldInput = inputsType.firstWhere((g) => e.name == g.name);
+    GeneratedNode node = GeneratedNode();
+    node['kind'] = 'Literal';  // TODO: hard code
+    node['name'] = e.name;
+    node['value'] = e.valueOrVariable.value.value;
+    node['type'] = fieldInput.type.name;
+    return node;
+  }).toList();
+
+  return nodes;
+}
+
+List<GraphQLFieldInput> _getTypeFromQueryField(FieldContext field, GraphQLSchema schema) {
+  final fieldName = field.fieldName.name;
+  final objectField = schema.queryType.fields.firstWhere((field) => field.name == fieldName);
+  return objectField.inputs;
+}
