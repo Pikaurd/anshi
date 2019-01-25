@@ -18,8 +18,8 @@ class RelayUtilKeys {
   static const String rootID = 'client:root';
   static const String rootType = '__Root';
   static const String typenameKey = '__typename';
-  static const Map unpublishRecordSentinel = {};
-  static const Map unpublishFieldSentinel = {};
+  static const Map unpublishRecordSentinel = {'__UNPUBLISH_RECORD_SENTINEL': true};
+  static const Map unpublishFieldSentinel = {'__UNPUBLISH_FIELD_SENTINEL': true};
 }
 
 class Arguments extends DelegatingMap<String, dynamic> {
