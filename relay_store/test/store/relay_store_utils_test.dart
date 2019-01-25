@@ -21,7 +21,9 @@ void main() {
           profilePicture(size: 128) { uri }
         }
       ''';
-      
+      final field = generateAndCompile(text, schema, allTypes)['UserFragment']['selections'].first;
+      final actual = RelayStoreUtils.getStorageKey(field, Variables());
+      expect(actual, 'profilePicture(size:128)');
     });
  
   });

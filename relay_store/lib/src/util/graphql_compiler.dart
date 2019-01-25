@@ -135,7 +135,7 @@ class SelectorGenerator {
     if (arguments.length == 0) return null;
     print('arguments: $arguments');
 
-    final inputFiledTypeFromParent = _getInputFieldsFromType(field, parentType);
+    final inputFiledTypeFromParent = parentType is GraphQLObjectType ? _getInputFieldsFromType(field, parentType) : [];
     final inputsType = inputFiledTypeFromParent.length > 0 ? inputFiledTypeFromParent : _getTypeFromQueryField(field, this._schema);
     var nodes = List<GeneratedNode>();
     nodes = arguments.map((e) {
