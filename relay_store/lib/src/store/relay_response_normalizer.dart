@@ -3,7 +3,7 @@ import '../util/normalization_node.dart';
 import '../util/invariant.dart';
 import 'relay_store_utils.dart';
 import '../util/dart_relay_node.dart';
-import './relay_store_utils.dart' as RelayStoreUtils;
+import './relay_store_utils.dart';
 
 // NormalizedResponse normalize(MutableRecordSource recordSource, NormalizationSelector selector, Map<String, dynamic> response) {
 NormalizedResponse normalize(MutableRecordSource recordSource, NormalizationSelector<GeneratedNode> selector, Map<String, dynamic> response) {
@@ -36,7 +36,7 @@ class RelayResponseNormalizer {
   }
 
   String _getRecordType(Map<String, dynamic> data) {
-    final typeName = data[RelayStoreUtils.typenameKey] as String;
+    final typeName = data[RelayUtilKeys.typenameKey] as String;
     invariant(typeName != null, 'RelayResponseNormalizer(): Expected a typename for record `$data`.');
     return typeName;
   }
@@ -79,6 +79,35 @@ class RelayResponseNormalizer {
   {
     final responseKey = selection['name'];
     final storageKey = getStorageKey(selection, this._variables);
+    final fieldValue = data[responseKey];
+    if (fieldValue == null) {
+      if (!this._handleStrippedNulls) { return; }
+      // FIXME:       RelayModernRecord.setValue(record, storageKey, null);
+    }
+
+    final selectionKind = selection['kind'];
+    if (selectionKind == NormalizationKind.scalarField) {
+      // TODO: handle scalar
+    } else if (selectionKind == NormalizationKind.linkedField) {
+      if (selection['plural']) {
+        this._normalizePluralLink(selection, record, storageKey, fieldValue);
+      } else {
+        this._normalizeLink(selection, record, storageKey, fieldValue);
+      }
+    } else if (selectionKind == NormalizationKind.matchField) {
+      invariant(false, 'RelayResponseNormalizer(): Unexpected ast kind `$selectionKind` during normalization.');
+    } else {
+      invariant(false, 'RelayResponseNormalizer(): Unexpected ast kind `$selectionKind` during normalization.');
+    }
+
+  }
+
+  void _normalizeLink(/* NormalizationLinkedField */RelayObject field, Record record, String storageKey, Map<String, dynamic> fieldValue) {
+    throw 'not implement';
+  }
+
+  void _normalizePluralLink(/* NormalizationLinkedField */RelayObject field, Record record, String storageKey, Map<String, dynamic> fieldValue) {
+    throw 'not implement';
   }
 
 }

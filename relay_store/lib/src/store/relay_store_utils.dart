@@ -6,19 +6,21 @@ import '../util/normalization_node_2.dart';
 import './relay_store_types.dart';
 import '../util/dart_relay_node.dart';
 
-const String fragmentsKey = '__fragments';
-const String fragmentPropNameKey = '__fragmentPropName';
-const String matchComponentKey = '__match_component';
-const String matchFragmentKey = '__match_fragment';
-const String idKey = '__id';
-const String moduleKey = '__id';
-const String refKey = '__id';
-const String refsKey = '__id';
-const String rootID = '__id';
-const String rootType = '__id';
-const String typenameKey = '__id';
-const Map unpublishRecordSentinel = {};
-const Map unpublishFieldSentinel = {};
+class RelayUtilKeys {
+  static const String fragmentsKey = '__fragments';
+  static const String fragmentPropNameKey = '__fragmentPropName';
+  static const String matchComponentKey = '__match_component';
+  static const String matchFragmentKey = '__match_fragment';
+  static const String idKey = '__id';
+  static const String moduleKey = '__module';
+  static const String refKey = '__ref';
+  static const String refsKey = '__refs';
+  static const String rootID = 'client:root';
+  static const String rootType = '__Root';
+  static const String typenameKey = '__typename';
+  static const Map unpublishRecordSentinel = {};
+  static const Map unpublishFieldSentinel = {};
+}
 
 class Arguments extends DelegatingMap<String, dynamic> {
   Map<String, dynamic> _delegate = {};

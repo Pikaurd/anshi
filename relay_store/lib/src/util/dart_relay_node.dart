@@ -6,26 +6,10 @@ abstract class RelayObject extends DelegatingMap<String, dynamic> {
   Map<String, dynamic> _data = {};
   @override
   Map<String, dynamic> get delegate => _data;
-}
 
-
-abstract class DartRelayNode extends DelegatingMap<String, dynamic> {
-  final Map<String, dynamic> _data = {};
-  final Symbol kind;
-  final List<String> _avaliableKeys;
-
-  @override
-  Map<String, dynamic> get delegate => _data;
-
-  DartRelayNode(this.kind, this._avaliableKeys) {
-    _data['kind'] = this.kind;
+  RelayObject([Map<String, dynamic> data]) {
+    _data = data == null ? {} : data;
   }
 
-  bool selfCheck() {
-    final isVerified = _avaliableKeys.every((k) => _data.keys.contains(k));
-    if (!isVerified) {
-      throw 'Missing keys';
-    }
-    return isVerified;
-  }
 }
+

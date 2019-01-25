@@ -25,11 +25,8 @@ abstract class MutableRecordSource extends RecordSource {
   void set(String dataID, Record record);
 }
 
-class Record extends DelegatingMap<String, dynamic> {
-  final Map<String, dynamic> _record = {};
-
-  @override
-  Map<String, dynamic> get delegate => _record;
+class Record extends RelayObject {
+  Record([Map<String, dynamic> data]): super(data);
 }
 
 class Variables extends DelegatingMap<String, dynamic> {
