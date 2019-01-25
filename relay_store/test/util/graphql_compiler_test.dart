@@ -145,6 +145,90 @@ void main() {
         expect(actual, expected);
       });
 
+      test('query return object', () {
+        const text = 'query U { userWithArg(id: 2) { id } }';
+        final actual = generateAndCompile(text, schema, allTypes);
+        final expected = {
+          'U': {
+            'kind': 'Request',
+            'fragment': {
+              'kind': 'Fragment',
+              'name': 'U',
+              'type': 'Query',
+              // 'metadata': null,
+              'argumentDefinitions': [],
+              'selections': [
+                {
+                  'kind': 'LinkedField',
+                  'name': 'userWithArg',
+                  'storageKey': 'userWithArg(id:2)',
+                  'args': [
+                    {
+                      'kind': 'Literal',
+                      'name': 'id',
+                      'value': 2,
+                      'type': 'ID',
+                    }
+                  ],
+                  'plural': false,
+                  'selections': [
+                    {
+                      'kind': 'ScalarField',
+                      'name': 'id',
+                      'args': null,
+                      'storageKey': null,
+                    },
+                  ],
+                }
+              ],
+            },
+            // 'operation': {
+            //   'kind': 'Operation',
+            //   'name': 'X',
+            //   'argumentDefinitions': [],
+            //   'selections': [
+            //     {
+            //       'kind': 'LinkedField',
+            //       'name': 'node',
+            //       'storageKey': 'node(id:2)',
+            //       'args': [
+            //         {
+            //           'kind': 'Literal',
+            //           'name': 'id',
+            //           'value': 2,
+            //           'type': 'ID'
+            //         }
+            //       ],
+            //       'plural': false,
+            //       'selections': [
+            //         // {
+            //         //   'kind': 'ScalarField',
+            //         //   'name': '__typename',
+            //         //   'args': null,
+            //         //   'storageKey': null
+            //         // },
+            //         {
+            //           'kind': 'ScalarField',
+            //           'name': 'id',
+            //           'args': null,
+            //           'storageKey': null
+            //         },
+            //       ],
+            //     }
+            //   ],
+            // },
+            // 'params': {
+            //   'operationKind': 'query',
+            //   'name': 'X',
+            //   'id': null,
+            //   'text': 'query X { user(id: 2) { id name }',
+            //   'metadata': {}
+            // }
+          }
+        };
+        expect(actual, equals(expected));
+      });
+
       test('fragment with inner input field', () {
         const text = '''
           fragment UserFragment on User {

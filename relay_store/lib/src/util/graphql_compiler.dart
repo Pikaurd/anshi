@@ -90,7 +90,12 @@ class SelectorGenerator {
       if (parentType is GraphQLListType) {
         return this._fieldHandle(selectionContext.field, parentType, parentType);
       } else if (parentType is GraphQLObjectType) {
-        final fieldType = parentType.fields.firstWhere((e) => e.name == selectionContext.field.fieldName.name).type;
+        GraphQLType fieldType;
+        try {
+          fieldType = parentType.fields.firstWhere((e) => e.name == selectionContext.field.fieldName.name).type;
+        } on StateError catch(_) {
+          fieldType = parentType;
+        }
         return this._fieldHandle(selectionContext.field, fieldType, parentType);
       } else {
         throw 'should NOT expand';

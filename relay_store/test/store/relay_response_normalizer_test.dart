@@ -27,18 +27,18 @@ void main() {
         field('users', listOf(userSchema)),
         field('user', userSchema),
         field('nodes', listOf(userSchema), inputs: [GraphQLFieldInput('id', graphQLId)]),
-        field('node', listOf(userSchema), inputs: [GraphQLFieldInput('id', graphQLId)]),
+        field('node', userSchema, inputs: [GraphQLFieldInput('id', graphQLId)]),
       ]),
     );
     final allTypes = [userSchema, addressSchema];
 
     test('normalize queries', () {
-      const text = 'query X { node(id: 2) { id name } }';
+      const text = 'query X { node(id: 1) { id name } }';
       final x = generateAndCompile(text, schema, allTypes)['X'];
       
       final Map<String, dynamic> payload = {
         'node': {
-          'id': 1,
+          'id': '1',
           '__typename': 'User',
           'name': 'haha',
         },

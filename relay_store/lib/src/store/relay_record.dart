@@ -5,7 +5,9 @@ import './relay_store_types.dart';
 import './relay_store_utils.dart';
 import '../util/invariant.dart';
 
+
 const __DEV__ = !bool.fromEnvironment("dart.vm.product");
+
 
 Record clone(Record record) {
   final newRecord = Record();

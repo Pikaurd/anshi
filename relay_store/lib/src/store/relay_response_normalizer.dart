@@ -1,9 +1,15 @@
+import 'package:quiver/core.dart';
+
 import './relay_store_types.dart';
 import '../util/normalization_node.dart';
 import '../util/invariant.dart';
 import 'relay_store_utils.dart';
 import '../util/dart_relay_node.dart';
 import './relay_store_utils.dart';
+import './relay_record.dart' as RelayRecord;
+import './generate_relay_client_id.dart';
+
+const __DEV__ = !bool.fromEnvironment("dart.vm.product");
 
 // NormalizedResponse normalize(MutableRecordSource recordSource, NormalizationSelector selector, Map<String, dynamic> response) {
 NormalizedResponse normalize(MutableRecordSource recordSource, NormalizationSelector<GeneratedNode> selector, Map<String, dynamic> response) {
@@ -42,6 +48,7 @@ class RelayResponseNormalizer {
   }
 
   void _traverseSelections(/*NormalizationNode*/RelayObject node, Record record, Map<String, dynamic> data) {
+    print('traverse ${node.delegate}');
     final selections = node['selections'] as List<RelayObject>;
     selections.forEach((selection) {
       final kind = selection['kind'];
@@ -69,6 +76,7 @@ class RelayResponseNormalizer {
   void _normalizeMatchField(/*NormalizationNode*/RelayObject parent, /*NormalizationMatchField*/RelayObject field, Record record, Map<String, dynamic> data) {
     final responseKey = _fieldOr(field['alias'], field['name']);
     final storageKey = getStorageKey(field, this._variables);
+    throw '_normalizeMatchField not implemented';
   }
 
   void _normalizeField(
@@ -103,11 +111,34 @@ class RelayResponseNormalizer {
   }
 
   void _normalizeLink(/* NormalizationLinkedField */RelayObject field, Record record, String storageKey, Map<String, dynamic> fieldValue) {
-    throw 'not implement';
+    String nextID;
+    if (fieldValue.containsKey('id') && fieldValue['id'] != null) {
+      nextID = fieldValue['id'];
+    } else if (RelayRecord.getLinkedRecordID(record, storageKey).isPresent) {
+      nextID = RelayRecord.getLinkedRecordID(record, storageKey).value;
+    } else {
+      nextID = generateRelayClientID(RelayRecord.getDataID(record), storageKey);
+    }
+    invariant(nextID is String, 'RelayResponseNormalizer: Expected id on field `$storageKey` to be a string.');
+
+    RelayRecord.setLinkedRecordID(record, storageKey, nextID);
+    var nextRecord = this._recordSource.get(nextID);
+    if (nextRecord.isEmpty) {
+      final typeName = /* TODO: concreteType */ this._getRecordType(fieldValue);
+      nextRecord = Optional.of(RelayRecord.create(nextID, typeName));
+      this._recordSource.set(nextID, nextRecord.value);
+    } else if (__DEV__) {
+      this._validateRecordType(nextRecord.value, field, fieldValue);
+    }
+    this._traverseSelections(field, nextRecord.value, fieldValue);
   }
 
   void _normalizePluralLink(/* NormalizationLinkedField */RelayObject field, Record record, String storageKey, Map<String, dynamic> fieldValue) {
     throw 'not implement';
+  }
+
+  void _validateRecordType(Record record, RelayObject field, Map<String, dynamic> payload) {
+    // TODO: not implement
   }
 
 }

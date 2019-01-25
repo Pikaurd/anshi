@@ -23,6 +23,7 @@ final schema = GraphQLSchema(
   queryType: objectType('query', fields: [
     field('users', listOf(userSchema)),
     field('user', userSchema),
+    field('userWithArg', userSchema, inputs: [GraphQLFieldInput('id', graphQLId)]),
     field('node', listOf(userSchema), inputs: [GraphQLFieldInput('id', graphQLId)]),
   ]),
 );
