@@ -90,12 +90,12 @@ class RelayResponseNormalizer {
     final fieldValue = data[responseKey];
     if (fieldValue == null) {
       if (!this._handleStrippedNulls) { return; }
-      // FIXME:       RelayModernRecord.setValue(record, storageKey, null);
+      RelayRecord.setValue(record, storageKey, null);
     }
 
     final selectionKind = selection['kind'];
     if (selectionKind == NormalizationKind.scalarField) {
-      // TODO: handle scalar
+      RelayRecord.setValue(record, storageKey, fieldValue);
     } else if (selectionKind == NormalizationKind.linkedField) {
       if (selection['plural']) {
         this._normalizePluralLink(selection, record, storageKey, fieldValue);

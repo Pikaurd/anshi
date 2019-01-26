@@ -32,7 +32,7 @@ void main() {
     );
     final allTypes = [userSchema, addressSchema];
 
-    test('normalize queries', () {
+    test('normalize query with LinkedField', () {
       const text = 'query X { node(id: 1) { id name } }';
       final x = generateAndCompile(text, schema, allTypes)['X'];
       
@@ -67,7 +67,60 @@ void main() {
         'client:root': {
           '__id': 'client:root',
           '__typename': '__Root',
-          'node(id:2)': {'__ref': '1'},
+          'node(id:1)': {'__ref': '1'},
+        }
+      };
+      expect(actual, expected);
+    });
+
+    test('normalize query with fragments', () {
+      const text = '''
+        query X { 
+          nodes(id: 1) { 
+            id 
+            name 
+            ...addressFragment
+          }
+        }
+        fragment addressFragment on Address {
+          id
+          text
+        }
+      ''';
+      final x = generateAndCompile(text, schema, allTypes)['X'];
+      
+      final Map<String, dynamic> payload = {
+        'node': {
+          'id': '1',
+          '__typename': 'User',
+          'name': 'haha',
+        },
+      };
+
+      final recordSource = RelayInMemoryRecordSource();
+      final record = Types.Record();
+      record['__id'] = 'client:root';
+      record['__typename'] = '__Root';
+      recordSource.set('client:root', record);
+
+      final selector = TSelector();
+      selector.dataID = 'client:root';
+      selector.node = x['fragment'];
+
+      normalize(recordSource, selector, payload);
+
+      final actual = recordSource.toJSON();
+      final expected = {
+        '1': {
+          '__id': '1',
+          'id': '1',
+          '__typename': 'User',
+          'name': 'haha',
+        },
+        'client:root': {
+          '__id': 'client:root',
+          '__typename': '__Root',
+          'node(id:1)': {'__ref': '1'},
         }
       };
       expect(actual, expected);
