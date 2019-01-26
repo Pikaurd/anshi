@@ -138,7 +138,6 @@ class SelectorGenerator {
   List<GeneratedNode> getArgumentValues(FieldContext field, GraphQLType parentType) {
     final arguments = field.arguments;
     if (arguments.length == 0) return null;
-    print('arguments: $arguments');
 
     final inputFiledTypeFromParent = parentType is GraphQLObjectType ? _getInputFieldsFromType(field, parentType) : [];
     final inputsType = inputFiledTypeFromParent.length > 0 ? inputFiledTypeFromParent : _getTypeFromQueryField(field, this._schema);
@@ -175,7 +174,6 @@ class SelectorGenerator {
 String getStorageKey(FieldContext field) {
   if (field == null) return null;
   if (field.arguments.length == 0) return null;
-  print('getStorageKey: $field');
 
   final x = field.arguments.map((e) => '${e.name}:${e.valueOrVariable.value.value}').toList();
   final arguments = x.join(',');

@@ -62,23 +62,13 @@ abstract class ReaderSelector<TReaderNode> {
 }
 
 abstract class Snapshot<TReaderNode> extends ReaderSelector<TReaderNode> {
-  Optional<SelectorData> data;
+  Optional<Map<String, dynamic>> data;
   RecordMap seenRecords;
   bool isMissingData;
 }
 
-class SelectorData extends DelegatingMap<String, dynamic> {
-  final Map<String, dynamic> _data = {};
-
-  @override
-  Map<String, dynamic> get delegate => _data;
-}
-
-class RecordMap extends DelegatingMap<String, Record> {
-  final Map<String, Record> _recordMap = {};
-
-  @override
-  Map<String, Record> get delegate => _recordMap;
+class RecordMap extends RelayObject<Record> {
+  RecordMap([Map<String, Record> data]): super(data);
 }
 
 abstract class OperationLoader {

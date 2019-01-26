@@ -48,7 +48,6 @@ class RelayResponseNormalizer {
   }
 
   void _traverseSelections(/*NormalizationNode*/RelayObject node, Record record, Map<String, dynamic> data) {
-    print('traverse ${node.delegate}');
     final selections = node['selections'] as List<RelayObject>;
     selections.forEach((selection) {
       final kind = selection['kind'];
@@ -133,8 +132,37 @@ class RelayResponseNormalizer {
     this._traverseSelections(field, nextRecord.value, fieldValue);
   }
 
-  void _normalizePluralLink(/* NormalizationLinkedField */RelayObject field, Record record, String storageKey, Map<String, dynamic> fieldValue) {
-    throw 'not implement';
+  void _normalizePluralLink(/* NormalizationLinkedField */RelayObject field, Record record, String storageKey, List<Map<String, dynamic>> fieldValue) {
+    final prevIDs = RelayRecord.getLinkedRecordIDs(record, storageKey);
+    List<String> nextIDs = [];
+    fieldValue.asMap().forEach((nextIndex, item) {
+      if (item == null) {
+        nextIDs.add(null);
+        return;
+      }
+      
+      String nextID;
+      if (item.containsKey('id') && item['id'] != null) {
+        nextID = item['id'];
+      } else if (prevIDs.isPresent && prevIDs.value[nextIndex] != null) {
+        nextID = prevIDs.value[nextIndex];
+      } else {
+        nextID = generateRelayClientID(RelayRecord.getDataID(record), storageKey, nextIndex);
+      }
+      assert(nextID != null);
+
+      nextIDs.add(nextID);
+      var nextRecord = this._recordSource.get(nextID);
+      if (nextRecord.isEmpty) {
+        final typeName = /* TODO: concreteType */ this._getRecordType(item);
+        nextRecord = Optional.of(RelayRecord.create(nextID, typeName));
+        this._recordSource.set(nextID, nextRecord.value);
+      } else if (__DEV__) {
+        this._validateRecordType(nextRecord.value, field, item);
+      }
+      this._traverseSelections(field, nextRecord.value, item);
+    });
+    RelayRecord.setLinkedRecordIDs(record, storageKey, nextIDs);
   }
 
   void _validateRecordType(Record record, RelayObject field, Map<String, dynamic> payload) {
