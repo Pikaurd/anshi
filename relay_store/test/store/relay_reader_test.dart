@@ -1,5 +1,7 @@
 import 'package:test/test.dart';
 
+import 'package:graphql_schema/graphql_schema.dart';
+
 import 'package:relay_store/src/store/relay_store_types.dart';
 import 'package:relay_store/src/store/relay_response_normalizer.dart';
 import 'package:relay_store/src/util/graphql_compiler.dart';
@@ -12,9 +14,28 @@ import 'package:relay_store/src/util/dart_relay_node.dart';
 import 'package:relay_store/src/store/relay_in_memory_record_source.dart';
 
 
-import '../test_common.dart';
+// import '../test_common.dart';
 
 void main() {
+  final addressSchema = objectType('Address', fields: [
+    field('id', graphQLString),
+    field('text', graphQLString),
+  ]);
+  final userSchema = objectType('User', fields: [
+    field('id', graphQLString),
+    field('name', graphQLString),
+    field('address', addressSchema),
+  ]);
+  final schema = GraphQLSchema(
+    queryType: objectType('query', fields: [
+      field('users', listOf(userSchema)),
+      field('user', userSchema),
+      field('nodes', listOf(userSchema), inputs: [GraphQLFieldInput('id', graphQLId)]),
+      field('node', userSchema, inputs: [GraphQLFieldInput('id', graphQLId)]),
+    ]),
+  );
+  final allTypes = [userSchema, addressSchema];
+
   group('RelayReader', () {
     MutableRecordSource source;
     final data = {

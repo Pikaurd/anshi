@@ -2,8 +2,11 @@ import 'package:quiver/collection.dart';
 import 'package:quiver/core.dart';
 
 import '../util/dart_relay_node.dart';
+import '../util/invariant.dart';
 import './relay_store_types.dart';
+import './relay_record.dart' as RelayRecord;
 import './relay_record_state.dart';
+import './relay_store_utils.dart';
 
 enum RelayConcreteNode {
   condition,
@@ -72,29 +75,113 @@ class RelayReader {
     return Optional.fromNullable(data);
   }
 
+  dynamic _getVariableValue(String name) {
+    invariant(this._variables.containsKey(name), 'RelayReader(): Undefined variable `$name`');
+    return this._variables[name];
+  }
+
   void _traverseSelections(List<GeneratedNode> selections, Record record, Map<String, dynamic> data) {
     selections.forEach((selection) {
-      // final String kind = selection['kind'];
-      // if (kind == _scalarField) {
-      //   this._readScalar(selection, record, data);
-      // } else if (kind == _linkedField) {
-      //   if (selection['plural']) {
-      //     this._readPluralLink(selection, record, data);
-      //   } else {
-      //     this._readLink(selection, record, data);
-      //   }
-      // } else if (kind == _condition) {
-
-      // } else if (kind == _inlineFragment) {
-
-      // } else if (kind == '' /* fragment spread */) {
-      // } else if (kind == _matchField) {
-      // } else  {
-      //   throw 'RelayReader(): Unexprected kind $kind':
-      // }
+      final String kind = selection['kind'];
+      if (kind == _scalarField) {
+        this._readScalar(selection, record, data);
+      } else if (kind == _linkedField) {
+        if (selection['plural']) {
+          this._readPluralLink(selection, record, data);
+        } else {
+          this._readLink(selection, record, data);
+        }
+      } else if (kind == _condition) {
+        final conditionValue = this._getVariableValue(selection['condition']);
+        if (conditionValue == selection['passingValue']) {
+          this._traverseSelections(selection['selections'], record, data);
+        }
+      } else if (kind == _inlineFragment) {
+        final typeName = RelayRecord.getType(record);
+        if (typeName != null && typeName == selection['type']) {
+          this._traverseSelections(selections, record, data);
+        }
+      } else if (kind == '' /* fragment spread */) {
+        throw 'RelayReader: fragment spread not implemented';
+      } else if (kind == _matchField) {
+        throw 'RelayReader: matchField not implemented';
+      } else  {
+        throw 'RelayReader(): Unexprected kind $kind';
+      }
     });
   }
 
+  void _readScalar(GeneratedNode field, Record record, Map<String, dynamic> data) {
+    final applicationName = field['name'];
+    final storageKey = getStorageKey(field, this._variables);
+    final linkedID = RelayRecord.getLinkedRecordID(record, storageKey);
+    if (linkedID.isEmpty) {
+      data[applicationName] = linkedID;
+      if (!record.containsKey(storageKey)) {
+        this._isMissingData = true;
+      }
+      return;
+    }
+
+    // final prevData = data[applicationName]; TODO: invarient
+
+    final linkedRecord = this._recordSource.get(linkedID.value);
+    this._seenRecords[linkedID.value] = linkedRecord.value;
+    if (linkedRecord.isEmpty) {
+      if (this._recordSource.getStatus(linkedID.value) == RecordState.unknown) {
+        this._isMissingData = true;
+      }
+      data[applicationName] = linkedRecord.value;
+      return;
+    }
+
+    throw 'not implemented';
+  }
+
+  void _readLink(GeneratedNode field, Record record, Map<String, dynamic> data) {
+    final applicationName = field['name'];
+    final storageKey = getStorageKey(field, this._variables);
+    final linkedID = RelayRecord.getLinkedRecordID(record, storageKey);
+    if (linkedID.isEmpty) {
+      data[applicationName] = Optional.absent();
+      if (!record.containsKey(storageKey)) {
+        this._isMissingData = true;
+      }
+      return;
+    }
+
+    final prevData = data[applicationName];
+    invariant(prevData != null, 'RelayReader(): Expected data for field `$applicationName` on record `${RelayRecord.getDataID(record)}` to be an object');
+    data[applicationName] = this._traverse(field, linkedID.value, prevData);
+  }
+
+  void _readPluralLink(GeneratedNode field, Record record, Map<String, dynamic> data) {
+    final applicationName = field['name'];
+    final storageKey = getStorageKey(field, this._variables);
+    final linkedIDs = RelayRecord.getLinkedRecordIDs(record, storageKey);
+
+    if (linkedIDs.isEmpty) {
+      data[applicationName] = Optional.absent();
+      if (!record.containsKey(storageKey)) {
+        this._isMissingData = true;
+      }
+      return ;
+    }
+
+    final prevData = data[applicationName];
+    invariant(prevData == null, 'RelayReader(): Expected data for field `$applicationName` on record `${RelayRecord.getDataID(record)}`');
+    final linkedArray = prevData == null ? [] : prevData;
+    linkedIDs.value.asMap().forEach((nextIndex, linkedID) {
+      if (linkedID == null) {
+        // TODO: undefined not handle
+        linkedArray[nextIndex] = linkedID;
+        return;
+      }
+      final prevItem = linkedArray[nextIndex];
+      linkedArray[nextIndex] = this._traverse(field, linkedID, prevItem);
+    });
+    data[applicationName] = linkedArray;
+  }
 
 }
 
